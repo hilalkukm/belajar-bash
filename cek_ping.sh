@@ -1,27 +1,36 @@
 #!/bin/bash
 
-# Read input from user | masukan file csv yang akan diuji
-read -p "Enter the path input CSV file : " in_file
+# Define the path to the CSV file
+csv_file="/home/sempak/Documents/cek_domain/domain_kukm.csv"
 
-# Read input from user | ouput file
-read -p "Enter the path output CSV file : " out_file
-
-if [[ ! -f "$in_file" ]]; then
-	echo "Error: CSV file '$in_file' not found" >&2
-	exit 1
+# Check if the CSV file exists
+if [[ ! -f "$csv_file" ]]; then
+    echo "CSV file not found: $csv_file"
+    exit 1
 fi
 
-echo "Domain,Status" > "$out_file"
+# Read the CSV file line by line
+while IFS= read -r domain
+do
+    # Trim any leading or trailing whitespace (if necessary)
+    domain=$(echo "$domain" | xargs)
 
-# Read input CSV file line by line
-while IFS= read -r domain; do
-	URL="https://$domain"
+    # Skip empty lines
+    if [[ -z "$domain" ]]; then
+        continue
+    fi
 
-	if curl -IkLs $URL | grep -q "HTTP/1.1 200 OK"; then
-		echo "Success : The host $URL is alive with HTTP code 200"
-		echo "$URL,Success" >> "$out_file"
-	else
-		echo "Error : The host $URL not return HTTP/1.1 200 OK" >&2
-		echo "$URL,Error" >> "$out_file"
-	fi
-done < "$in_file"
+    # Debug: Print the domain being checked
+    echo "Checking domain: $domain"
+
+    # Ping the domain with 4 packets and suppress the output
+    if ping -c 4 "$domain" > /dev/null 2>&1; then
+        echo "Host $domain is alive."
+    else
+        echo "Host $domain is unreachable."
+    fi
+
+    # Introduce a delay of 1 second
+    sleep 4
+
+done < "$csv_file"
