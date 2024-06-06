@@ -24,4 +24,6 @@ while IFS= read -r domain; do
 		echo "Error : The host $URL not return HTTP/1.1 200 OK" >&2
 		echo "$URL,Error" >> "$out_file"
 	fi
-done < "$in_file"
+done << EOF
+$(cat "$in_file")
+EOF
