@@ -1,18 +1,22 @@
 #!/bin/bash
 
-# Define the path to the CSV file
-csv_file="/home/sempak/Documents/cek_domain/domain_kukm.csv"
+# Read input from user | masukan file CSV
+read -p "Enter the path input CSV file : " in_file
+
+# Read input from user | output file CSV
+read -p "Enter the path input CSV file : " out_file
 
 # Check if the CSV file exists
-if [[ ! -f "$csv_file" ]]; then
-    echo "CSV file not found: $csv_file"
+if [[ ! -f "$in_file" ]]; then
+    echo "Error : CSV file '$in_file' not found" >&2
     exit 1
 fi
 
+echo "Domain,Status" > "$out_file"
+
 # Read the CSV file line by line
-while IFS= read -r domain
+while IFS= read -r domain || [[ -n "$domain" ]];
 do
-    # Trim any leading or trailing whitespace (if necessary)
     domain=$(echo "$domain" | xargs)
 
     # Skip empty lines
@@ -26,11 +30,13 @@ do
     # Ping the domain with 4 packets and suppress the output
     if ping -c 4 "$domain" > /dev/null 2>&1; then
         echo "Host $domain is alive."
+	echo "$domain,Alive" >> "$out_file"
     else
         echo "Host $domain is unreachable."
+	echo "$domain,Unreachable" >> "$out_file"
     fi
 
     # Introduce a delay of 1 second
-    sleep 4
+    sleep 2
 
-done < "$csv_file"
+done < "$in_file"
