@@ -13,17 +13,23 @@ fi
 
 echo "Domain,Status" > "$out_file"
 
+
 # Read input CSV file line by line
 while IFS= read -r domain; do
 	URL="https://$domain"
 
-	if curl -IkLs $URL | grep -q "HTTP/1.1 200 OK"; then
+
+#	HTTP Code from curl
+	http_code=$(curl -o /dev/null -s -w "%{http_code}" -L -k $URL)
+
+	if [ $http_code -eq 200  ] ; then
 		echo "Success : The host $URL is alive with HTTP code 200"
 		echo "$URL,Success" >> "$out_file"
 	else
 		echo "Error : The host $URL not return HTTP/1.1 200 OK" >&2
 		echo "$URL,Error" >> "$out_file"
 	fi
+
 done << EOF
 $(cat "$in_file")
 EOF
